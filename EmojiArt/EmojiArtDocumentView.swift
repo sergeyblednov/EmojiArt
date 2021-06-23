@@ -32,11 +32,22 @@ struct EmojiArtDocumentView: View {
                     ProgressView().scaleEffect(2)
                 } else {
                     ForEach(document.emojis) { emoji in
-                        Text(emoji.text)
-                            .scaleEffect(zoomScale)
-                            .font(.system(size: fontSize(for: emoji)))
-                            .position(position(for: emoji, in: geometry))
+                        if document.selectedEmojis.contains(emoji) {
+                            Text(emoji.text)
+                                .scaleEffect(zoomScale * 1.5)
+                                .font(.system(size: fontSize(for: emoji)))
+                                .position(position(for: emoji, in: geometry))
+                                .gesture(tapToSelect(emoji))
+//                                .onDrag { NSItemProvider(object: emoji.text as NSString) /
+                        } else {
+                            Text(emoji.text)
+                                .scaleEffect(zoomScale)
+                                .font(.system(size: fontSize(for: emoji)))
+                                .position(position(for: emoji, in: geometry))
+                                .gesture(tapToSelect(emoji))
+                        }
                     }
+                    
                 }
             }
             .clipped()
@@ -78,6 +89,10 @@ struct EmojiArtDocumentView: View {
         }
     }
     
+    private func toggleSelection(_ emoji: EmojiArtModel.Emoji) {
+        document.toggleEmoji(emoji)
+    }
+    
     private func zoomGesture() -> some Gesture {
         MagnificationGesture()
             .updating($gestureZoomScale) { latestGestureScale, gestureZoomScale, transaction in
@@ -93,6 +108,15 @@ struct EmojiArtDocumentView: View {
             .onEnded {
                 withAnimation {
                     zoomToFit(document.backgroundImage, in: size)
+                }
+            }
+    }
+    
+    private func tapToSelect(_ emoji: EmojiArtModel.Emoji) -> some Gesture {
+        TapGesture(count: 1)
+            .onEnded {
+                withAnimation {
+                    toggleSelection(emoji)
                 }
             }
     }
